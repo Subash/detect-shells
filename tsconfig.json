@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "target": "es2017",
+    "strict": true,
+    "outDir": "./lib"
+  },
+  "include": ["src/**/*.ts"],
+}

@@ -1,0 +1,36 @@
+{
+  "name": "detect-shells",
+  "version": "0.0.1",
+  "description": "Detect shells installed on a system",
+  "main": "lib/index.js",
+  "scripts": {
+    "test": "jest",
+    "clean": "rm -r lib",
+    "compile": "tsc --strictNullChecks false",
+    "prepack": "npm run clean && npm run compile"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Subash/detect-shells.git"
+  },
+  "keywords": [
+    "detect",
+    "shells"
+  ],
+  "author": "Subash Pathak",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Subash/detect-shells/issues"
+  },
+  "homepage": "https://github.com/Subash/detect-shells#readme",
+  "dependencies": {
+    "app-path": "^3.2.0",
+    "fs-extra": "^8.1.0",
+    "registry-js": "^1.8.0"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^8.0.1",
+    "jest": "^24.9.0",
+    "typescript": "^3.6.4"
+  }
+}

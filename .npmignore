@@ -1,0 +1,8 @@
+.DS_Store
+.gitignore
+.gitattributes
+package-lock.json
+tsconfig.json
+/node_modules
+/src
+/tests
