@@ -26,7 +26,7 @@
   "dependencies": {
     "app-path": "^3.2.0",
     "fs-extra": "^9.0.1",
-    "registry-js": "^1.12.0"
+    "registry-js": "1.12.0"
   },
   "devDependencies": {
     "@types/fs-extra": "^9.0.6",
