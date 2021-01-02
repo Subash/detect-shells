@@ -7,6 +7,7 @@ import { assertNever } from '../fatal-error'
 import { IFoundShell } from './found-shell'
 import { enableWSLDetection } from '../feature-flag'
 import { findGitOnPath } from '../is-git-on-path'
+import { parseEnumValue } from '../enum'
 import log from '../log'
 
 export enum Shell {
@@ -18,44 +19,13 @@ export enum Shell {
   Cygwin = 'Cygwin',
   WSL = 'WSL',
   WindowTerminal = 'Windows Terminal',
+  Alacritty = 'Alacritty',
 }
 
 export const Default = Shell.Cmd
 
 export function parse(label: string): Shell {
-  if (label === Shell.Cmd) {
-    return Shell.Cmd
-  }
-
-  if (label === Shell.PowerShell) {
-    return Shell.PowerShell
-  }
-
-  if (label === Shell.PowerShellCore) {
-    return Shell.PowerShellCore
-  }
-
-  if (label === Shell.Hyper) {
-    return Shell.Hyper
-  }
-
-  if (label === Shell.GitBash) {
-    return Shell.GitBash
-  }
-
-  if (label === Shell.Cygwin) {
-    return Shell.Cygwin
-  }
-
-  if (label === Shell.WSL) {
-    return Shell.WSL
-  }
-
-  if (label === Shell.WindowTerminal) {
-    return Shell.WindowTerminal
-  }
-
-  return Default
+  return parseEnumValue(Shell, label) ?? Default
 }
 
 export async function getAvailableShells(): Promise<
@@ -118,6 +88,14 @@ export async function getAvailableShells(): Promise<
         path: wslPath,
       })
     }
+  }
+
+  const alacrittyPath = await findAlacritty()
+  if (alacrittyPath != null) {
+    shells.push({
+      shell: Shell.Alacritty,
+      path: alacrittyPath,
+    })
   }
 
   const windowsTerminal = await findWindowsTerminal()
@@ -339,6 +317,31 @@ async function findWSL(): Promise<string | null> {
   return null
 }
 
+async function findAlacritty(): Promise<string | null> {
+  const registryPath = enumerateValues(
+    HKEY.HKEY_CLASSES_ROOT,
+    'Directory\\Background\\shell\\Open Alacritty here'
+  )
+
+  if (registryPath.length === 0) {
+    return null
+  }
+
+  const alacritty = registryPath.find(e => e.name === 'Icon')
+  if (alacritty && alacritty.type === RegistryValueType.REG_SZ) {
+    const path = alacritty.data
+    if (await pathExists(path)) {
+      return path
+    } else {
+      log.debug(
+        `[Alacritty] registry entry found but does not exist at '${path}'`
+      )
+    }
+  }
+
+  return null
+}
+
 async function findWindowsTerminal(): Promise<string | null> {
   // Windows Terminal has a link at
   // C:\Users\<User>\AppData\Local\Microsoft\WindowsApps\wt.exe
@@ -367,31 +370,18 @@ export function launch(
 
   switch (shell) {
     case Shell.PowerShell:
-      const psCommand = `"Set-Location -LiteralPath '${path}'"`
-      return spawn(
-        'START',
-        [
-          '"PowerShell"',
-          `"${foundShell.path}"`,
-          '-NoExit',
-          '-Command',
-          psCommand,
-        ],
-        {
-          shell: true,
-          cwd: path,
-        }
-      )
+      return spawn('START', ['"PowerShell"', `"${foundShell.path}"`], {
+        shell: true,
+        cwd: path,
+      })
     case Shell.PowerShellCore:
-      const psCoreCommand = `"Set-Location -LiteralPath '${path}'"`
       return spawn(
         'START',
         [
           '"PowerShell Core"',
           `"${foundShell.path}"`,
-          '-NoExit',
-          '-Command',
-          psCoreCommand,
+          '-WorkingDirectory',
+          `"${path}"`,
         ],
         {
           shell: true,
@@ -402,6 +392,13 @@ export function launch(
       const hyperPath = `"${foundShell.path}"`
       log.info(`launching ${shell} at path: ${hyperPath}`)
       return spawn(hyperPath, [`"${path}"`], {
+        shell: true,
+        cwd: path,
+      })
+    case Shell.Alacritty:
+      const alacrittyPath = `"${foundShell.path}"`
+      log.info(`launching ${shell} at path: ${alacrittyPath}`)
+      return spawn(alacrittyPath, [`--working-directory "${path}"`], {
         shell: true,
         cwd: path,
       })

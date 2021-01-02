@@ -13,7 +13,7 @@ export type Shell = Darwin.Shell | Win32.Shell | Linux.Shell
 export type FoundShell = IFoundShell<Shell>
 
 /** The default shell. */
-export const Default = (function() {
+export const Default = (function () {
   if (process.platform === 'darwin') {
     return Darwin.Default
   } else if (process.platform === 'win32') {
@@ -86,9 +86,7 @@ export async function launchShell(
   if (!exists) {
     const label = process.platform === 'darwin' ? 'Preferences' : 'Options'
     throw new ShellError(
-      `Could not find executable for '${shell.shell}' at path '${
-        shell.path
-      }'.  Please open ${label} and select an available shell.`
+      `Could not find executable for '${shell.shell}' at path '${shell.path}'.  Please open ${label} and select an available shell.`
     )
   }
 
@@ -107,9 +105,7 @@ export async function launchShell(
     return Promise.resolve()
   } else {
     return Promise.reject(
-      `Platform not currently supported for launching shells: ${
-        process.platform
-      }`
+      `Platform not currently supported for launching shells: ${process.platform}`
     )
   }
 }
@@ -119,10 +115,12 @@ function addErrorTracing(
   cp: ChildProcess,
   onError: (error: Error) => void
 ) {
-  cp.stderr.on('data', chunk => {
-    const text = chunk instanceof Buffer ? chunk.toString() : chunk
-    log.debug(`[${shell}] stderr: '${text}'`)
-  })
+  if (cp.stderr !== null) {
+    cp.stderr.on('data', chunk => {
+      const text = chunk instanceof Buffer ? chunk.toString() : chunk
+      log.debug(`[${shell}] stderr: '${text}'`)
+    })
+  }
 
   cp.on('error', err => {
     log.debug(`[${shell}] an error was encountered`, err)

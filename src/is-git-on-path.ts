@@ -1,11 +1,11 @@
-import { spawn, SpawnOptions } from 'child_process'
+import { spawn, SpawnOptionsWithoutStdio } from 'child_process'
 import * as Path from 'path'
 import log from './log'
 
 function captureCommandOutput(
   command: string,
-  args?: string[] | undefined,
-  options: SpawnOptions = {}
+  args: string[],
+  options: SpawnOptionsWithoutStdio = {}
 ): Promise<string | undefined> {
   return new Promise<string | undefined>((resolve, reject) => {
     const cp = spawn(command, args, options)
@@ -23,7 +23,7 @@ function captureCommandOutput(
       total += chunk.length
     })
 
-    cp.on('close', function(code) {
+    cp.on('close', function (code) {
       if (code !== 0) {
         resolve(undefined)
       } else {
