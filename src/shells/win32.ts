@@ -1,13 +1,12 @@
 import { spawn, ChildProcess } from 'child_process';
 import * as Path from 'path';
 import { enumerateValues, HKEY, RegistryValueType } from 'registry-js';
-import { pathExists } from 'fs-extra';
-
 import { assertNever } from '../fatal-error';
 import { IFoundShell } from './found-shell';
 import { enableWSLDetection } from '../feature-flag';
 import { findGitOnPath } from '../is-git-on-path';
 import { parseEnumValue } from '../enum';
+import { pathExists } from '../path-exists';
 import log from '../log';
 
 export enum Shell {
@@ -19,6 +18,7 @@ export enum Shell {
   Cygwin = 'Cygwin',
   WSL = 'WSL',
   WindowTerminal = 'Windows Terminal',
+  FluentTerminal = 'Fluent Terminal',
   Alacritty = 'Alacritty'
 }
 
@@ -103,6 +103,14 @@ export async function getAvailableShells(): Promise<
     shells.push({
       shell: Shell.WindowTerminal,
       path: windowsTerminal
+    });
+  }
+
+  const fluentTerminal = await findFluentTerminal();
+  if (fluentTerminal != null) {
+    shells.push({
+      shell: Shell.FluentTerminal,
+      path: fluentTerminal
     });
   }
   return shells;
@@ -364,6 +372,26 @@ async function findWindowsTerminal(): Promise<string | null> {
   return null;
 }
 
+async function findFluentTerminal(): Promise<string | null> {
+  // Fluent Terminal has a link at
+  // C:\Users\<User>\AppData\Local\Microsoft\WindowsApps\flute.exe
+  const localAppData = process.env.LocalAppData;
+  if (localAppData != null) {
+    const fluentTerminalpath = Path.join(
+      localAppData,
+      '\\Microsoft\\WindowsApps\\flute.exe'
+    );
+    if (await pathExists(fluentTerminalpath)) {
+      return fluentTerminalpath;
+    } else {
+      log.debug(
+        `[Fluent Terminal] flute.exe doest not exist at '${fluentTerminalpath}'`
+      );
+    }
+  }
+  return null;
+}
+
 export function launch(
   foundShell: IFoundShell<Shell>,
   path: string
@@ -440,6 +468,10 @@ export function launch(
       const windowsTerminalPath = `"${foundShell.path}"`;
       log.info(`launching ${shell} at path: ${windowsTerminalPath}`);
       return spawn(windowsTerminalPath, ['-d .'], { shell: true, cwd: path });
+    case Shell.FluentTerminal:
+      const fluentTerminalPath = `"${foundShell.path}"`;
+      log.info(`launching ${shell} at path: ${fluentTerminalPath}`);
+      return spawn(fluentTerminalPath, ['new'], { shell: true, cwd: path });
     default:
       return assertNever(shell, `Unknown shell: ${shell}`);
   }
