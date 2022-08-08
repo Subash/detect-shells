@@ -1,2 +1,2 @@
-export * from './shared'
-export { ShellError } from './error'
+export * from './shared';
+export { ShellError } from './error';

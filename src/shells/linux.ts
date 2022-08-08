@@ -1,8 +1,8 @@
-import { spawn, ChildProcess } from 'child_process'
-import { pathExists } from 'fs-extra'
-import { assertNever } from '../fatal-error'
-import { IFoundShell } from './found-shell'
-import { parseEnumValue } from '../enum'
+import { spawn, ChildProcess } from 'child_process';
+import { pathExists } from 'fs-extra';
+import { assertNever } from '../fatal-error';
+import { IFoundShell } from './found-shell';
+import { parseEnumValue } from '../enum';
 
 export enum Shell {
   Gnome = 'GNOME Terminal',
@@ -12,39 +12,39 @@ export enum Shell {
   Urxvt = 'URxvt',
   Konsole = 'Konsole',
   Xterm = 'XTerm',
-  Terminology = 'Terminology',
+  Terminology = 'Terminology'
 }
 
-export const Default = Shell.Gnome
+export const Default = Shell.Gnome;
 
 export function parse(label: string): Shell {
-  return parseEnumValue(Shell, label) ?? Default
+  return parseEnumValue(Shell, label) ?? Default;
 }
 
 async function getPathIfAvailable(path: string): Promise<string | null> {
-  return (await pathExists(path)) ? path : null
+  return (await pathExists(path)) ? path : null;
 }
 
 function getShellPath(shell: Shell): Promise<string | null> {
   switch (shell) {
     case Shell.Gnome:
-      return getPathIfAvailable('/usr/bin/gnome-terminal')
+      return getPathIfAvailable('/usr/bin/gnome-terminal');
     case Shell.Mate:
-      return getPathIfAvailable('/usr/bin/mate-terminal')
+      return getPathIfAvailable('/usr/bin/mate-terminal');
     case Shell.Tilix:
-      return getPathIfAvailable('/usr/bin/tilix')
+      return getPathIfAvailable('/usr/bin/tilix');
     case Shell.Terminator:
-      return getPathIfAvailable('/usr/bin/terminator')
+      return getPathIfAvailable('/usr/bin/terminator');
     case Shell.Urxvt:
-      return getPathIfAvailable('/usr/bin/urxvt')
+      return getPathIfAvailable('/usr/bin/urxvt');
     case Shell.Konsole:
-      return getPathIfAvailable('/usr/bin/konsole')
+      return getPathIfAvailable('/usr/bin/konsole');
     case Shell.Xterm:
-      return getPathIfAvailable('/usr/bin/xterm')
+      return getPathIfAvailable('/usr/bin/xterm');
     case Shell.Terminology:
-      return getPathIfAvailable('/usr/bin/terminology')
+      return getPathIfAvailable('/usr/bin/terminology');
     default:
-      return assertNever(shell, `Unknown shell: ${shell}`)
+      return assertNever(shell, `Unknown shell: ${shell}`);
   }
 }
 
@@ -59,7 +59,7 @@ export async function getAvailableShells(): Promise<
     urxvtPath,
     konsolePath,
     xtermPath,
-    terminologyPath,
+    terminologyPath
   ] = await Promise.all([
     getShellPath(Shell.Gnome),
     getShellPath(Shell.Mate),
@@ -68,65 +68,65 @@ export async function getAvailableShells(): Promise<
     getShellPath(Shell.Urxvt),
     getShellPath(Shell.Konsole),
     getShellPath(Shell.Xterm),
-    getShellPath(Shell.Terminology),
-  ])
+    getShellPath(Shell.Terminology)
+  ]);
 
-  const shells: Array<IFoundShell<Shell>> = []
+  const shells: Array<IFoundShell<Shell>> = [];
   if (gnomeTerminalPath) {
-    shells.push({ shell: Shell.Gnome, path: gnomeTerminalPath })
+    shells.push({ shell: Shell.Gnome, path: gnomeTerminalPath });
   }
 
   if (mateTerminalPath) {
-    shells.push({ shell: Shell.Mate, path: mateTerminalPath })
+    shells.push({ shell: Shell.Mate, path: mateTerminalPath });
   }
 
   if (tilixPath) {
-    shells.push({ shell: Shell.Tilix, path: tilixPath })
+    shells.push({ shell: Shell.Tilix, path: tilixPath });
   }
 
   if (terminatorPath) {
-    shells.push({ shell: Shell.Terminator, path: terminatorPath })
+    shells.push({ shell: Shell.Terminator, path: terminatorPath });
   }
 
   if (urxvtPath) {
-    shells.push({ shell: Shell.Urxvt, path: urxvtPath })
+    shells.push({ shell: Shell.Urxvt, path: urxvtPath });
   }
 
   if (konsolePath) {
-    shells.push({ shell: Shell.Konsole, path: konsolePath })
+    shells.push({ shell: Shell.Konsole, path: konsolePath });
   }
 
   if (xtermPath) {
-    shells.push({ shell: Shell.Xterm, path: xtermPath })
+    shells.push({ shell: Shell.Xterm, path: xtermPath });
   }
 
   if (terminologyPath) {
-    shells.push({ shell: Shell.Terminology, path: terminologyPath })
+    shells.push({ shell: Shell.Terminology, path: terminologyPath });
   }
 
-  return shells
+  return shells;
 }
 
 export function launch(
   foundShell: IFoundShell<Shell>,
   path: string
 ): ChildProcess {
-  const shell = foundShell.shell
+  const shell = foundShell.shell;
   switch (shell) {
     case Shell.Gnome:
     case Shell.Mate:
     case Shell.Tilix:
     case Shell.Terminator:
-      return spawn(foundShell.path, ['--working-directory', path])
+      return spawn(foundShell.path, ['--working-directory', path]);
     case Shell.Urxvt:
-      return spawn(foundShell.path, ['-cd', path])
+      return spawn(foundShell.path, ['-cd', path]);
     case Shell.Konsole:
-      return spawn(foundShell.path, ['--workdir', path])
+      return spawn(foundShell.path, ['--workdir', path]);
     case Shell.Xterm:
-      return spawn(foundShell.path, ['-e', '/bin/bash'], { cwd: path })
+      return spawn(foundShell.path, ['-e', '/bin/bash'], { cwd: path });
     case Shell.Terminology:
-      return spawn(foundShell.path, ['-d', path])
+      return spawn(foundShell.path, ['-d', path]);
     default:
-      return assertNever(shell, `Unknown shell: ${shell}`)
+      return assertNever(shell, `Unknown shell: ${shell}`);
   }
 }

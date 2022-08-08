@@ -1,8 +1,8 @@
-import { spawn, ChildProcess } from 'child_process'
-import { assertNever } from '../fatal-error'
-import { IFoundShell } from './found-shell'
-import appPath from 'app-path'
-import { parseEnumValue } from '../enum'
+import { spawn, ChildProcess } from 'child_process';
+import { assertNever } from '../fatal-error';
+import { IFoundShell } from './found-shell';
+import appPath from 'app-path';
+import { parseEnumValue } from '../enum';
 
 export enum Shell {
   Terminal = 'Terminal',
@@ -10,41 +10,41 @@ export enum Shell {
   iTerm2 = 'iTerm2',
   PowerShellCore = 'PowerShell Core',
   Kitty = 'Kitty',
-  Alacritty = 'Alacritty',
+  Alacritty = 'Alacritty'
 }
 
-export const Default = Shell.Terminal
+export const Default = Shell.Terminal;
 
 export function parse(label: string): Shell {
-  return parseEnumValue(Shell, label) ?? Default
+  return parseEnumValue(Shell, label) ?? Default;
 }
 
 function getBundleID(shell: Shell): string {
   switch (shell) {
     case Shell.Terminal:
-      return 'com.apple.Terminal'
+      return 'com.apple.Terminal';
     case Shell.iTerm2:
-      return 'com.googlecode.iterm2'
+      return 'com.googlecode.iterm2';
     case Shell.Hyper:
-      return 'co.zeit.hyper'
+      return 'co.zeit.hyper';
     case Shell.PowerShellCore:
-      return 'com.microsoft.powershell'
+      return 'com.microsoft.powershell';
     case Shell.Kitty:
-      return 'net.kovidgoyal.kitty'
+      return 'net.kovidgoyal.kitty';
     case Shell.Alacritty:
-      return 'io.alacritty'
+      return 'io.alacritty';
     default:
-      return assertNever(shell, `Unknown shell: ${shell}`)
+      return assertNever(shell, `Unknown shell: ${shell}`);
   }
 }
 
 async function getShellPath(shell: Shell): Promise<string | null> {
-  const bundleId = getBundleID(shell)
+  const bundleId = getBundleID(shell);
   try {
-    return await appPath(bundleId)
+    return await appPath(bundleId);
   } catch (e) {
     // `appPath` will raise an error if it cannot find the program.
-    return null
+    return null;
   }
 }
 
@@ -57,44 +57,44 @@ export async function getAvailableShells(): Promise<
     iTermPath,
     powerShellCorePath,
     kittyPath,
-    alacrittyPath,
+    alacrittyPath
   ] = await Promise.all([
     getShellPath(Shell.Terminal),
     getShellPath(Shell.Hyper),
     getShellPath(Shell.iTerm2),
     getShellPath(Shell.PowerShellCore),
     getShellPath(Shell.Kitty),
-    getShellPath(Shell.Alacritty),
-  ])
+    getShellPath(Shell.Alacritty)
+  ]);
 
-  const shells: Array<IFoundShell<Shell>> = []
+  const shells: Array<IFoundShell<Shell>> = [];
   if (terminalPath) {
-    shells.push({ shell: Shell.Terminal, path: terminalPath })
+    shells.push({ shell: Shell.Terminal, path: terminalPath });
   }
 
   if (hyperPath) {
-    shells.push({ shell: Shell.Hyper, path: hyperPath })
+    shells.push({ shell: Shell.Hyper, path: hyperPath });
   }
 
   if (iTermPath) {
-    shells.push({ shell: Shell.iTerm2, path: iTermPath })
+    shells.push({ shell: Shell.iTerm2, path: iTermPath });
   }
 
   if (powerShellCorePath) {
-    shells.push({ shell: Shell.PowerShellCore, path: powerShellCorePath })
+    shells.push({ shell: Shell.PowerShellCore, path: powerShellCorePath });
   }
 
   if (kittyPath) {
-    const kittyExecutable = `${kittyPath}/Contents/MacOS/kitty`
-    shells.push({ shell: Shell.Kitty, path: kittyExecutable })
+    const kittyExecutable = `${kittyPath}/Contents/MacOS/kitty`;
+    shells.push({ shell: Shell.Kitty, path: kittyExecutable });
   }
 
   if (alacrittyPath) {
-    const alacrittyExecutable = `${alacrittyPath}/Contents/MacOS/alacritty`
-    shells.push({ shell: Shell.Alacritty, path: alacrittyExecutable })
+    const alacrittyExecutable = `${alacrittyPath}/Contents/MacOS/alacritty`;
+    shells.push({ shell: Shell.Alacritty, path: alacrittyExecutable });
   }
 
-  return shells
+  return shells;
 }
 
 export function launch(
@@ -108,15 +108,15 @@ export function launch(
     //
     // This workaround launches the internal `kitty` executable which
     // will open a new window to the desired path.
-    return spawn(foundShell.path, ['--single-instance', '--directory', path])
+    return spawn(foundShell.path, ['--single-instance', '--directory', path]);
   } else if (foundShell.shell === Shell.Alacritty) {
     // Alacritty cannot open files in the folder format.
     //
     // It uses --working-directory command to start the shell
     // in the specified working directory.
-    return spawn(foundShell.path, ['--working-directory', path])
+    return spawn(foundShell.path, ['--working-directory', path]);
   } else {
-    const bundleID = getBundleID(foundShell.shell)
-    return spawn('open', ['-b', bundleID, path])
+    const bundleID = getBundleID(foundShell.shell);
+    return spawn('open', ['-b', bundleID, path]);
   }
 }

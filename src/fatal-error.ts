@@ -1,6 +1,6 @@
 /** Throw an error. */
 export function fatalError(msg: string): never {
-  throw new Error(msg)
+  throw new Error(msg);
 }
 
 /**
@@ -17,7 +17,7 @@ export function fatalError(msg: string): never {
  *
  */
 export function assertNever(x: never, message: string): never {
-  throw new Error(message)
+  throw new Error(message);
 }
 
 /**
@@ -28,8 +28,8 @@ export function assertNever(x: never, message: string): never {
  */
 export function forceUnwrap<T>(message: string, x: T | null | undefined): T {
   if (x == null) {
-    return fatalError(message)
+    return fatalError(message);
   } else {
-    return x
+    return x;
   }
 }

@@ -6,5 +6,5 @@ export function parseEnumValue<T extends string>(
   enumObj: Record<string, T>,
   value: string
 ): T | undefined {
-  return Object.values(enumObj).find(v => v === value)
+  return Object.values(enumObj).find((v) => v === value);
 }
