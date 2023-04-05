@@ -1,15 +1,13 @@
 ### Detect Shells
-Extracted manually from https://github.com/desktop/desktop/tree/development/app/src/lib/shells
+
+Extracted from https://github.com/desktop/desktop/tree/development/app/src/lib/shells
 
 ```javascript
-const detectShells = require('detect-shells');
-detectShells
-  .getAvailableShells()
-  .then((shells)=> {
-    console.log(shells);
-  })
-  .catch((err)=> console.log(err));
-});
+import path from 'node:path';
+import { getAvailableShells, launchShell } from 'detect-shells';
+
+const shells = await getAvailableShells();
+await launchShell(shells[0], process.cwd());
 ```
 
 License -> https://github.com/desktop/desktop/blob/development/LICENSE
