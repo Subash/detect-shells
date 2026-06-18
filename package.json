@@ -1,6 +1,6 @@
 {
   "name": "detect-shells",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "description": "Detect shells installed on a system",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -32,6 +32,6 @@
   "devDependencies": {
     "jest": "^29.5.0",
     "jszip": "^3.10.1",
-    "typescript": "^5.0.3"
+    "typescript": "~5.2.0"
   }
 }

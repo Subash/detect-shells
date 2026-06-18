@@ -45,24 +45,21 @@ export function parse(label: string): Shell {
 
 /** Get the shells available for the user. */
 export async function getAvailableShells(): Promise<ReadonlyArray<FoundShell>> {
-  if (shellCache) {
-    return shellCache
+  if (!shellCache) {
+    if (process.platform === 'darwin') {
+      shellCache = await Darwin.getAvailableShells()
+    } else if (process.platform === 'win32') {
+      shellCache = await Win32.getAvailableShells()
+    } else if (process.platform === 'linux') {
+      shellCache = await Linux.getAvailableShells()
+    } else {
+      return Promise.reject(
+        `Platform not currently supported for resolving shells: ${process.platform}`
+      )
+    }
   }
 
-  if (process.platform === 'darwin') {
-    shellCache = await Darwin.getAvailableShells()
-    return shellCache
-  } else if (process.platform === 'win32') {
-    shellCache = await Win32.getAvailableShells()
-    return shellCache
-  } else if (process.platform === 'linux') {
-    shellCache = await Linux.getAvailableShells()
-    return shellCache
-  }
-
-  return Promise.reject(
-    `Platform not currently supported for resolving shells: ${process.platform}`
-  )
+  return shellCache.toSorted((a, b) => a.shell.localeCompare(b.shell))
 }
 
 /** Find the given shell or the default if the given shell can't be found. */
