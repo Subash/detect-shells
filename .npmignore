@@ -1,7 +1,6 @@
 /.github
 /node_modules
-/scripts
 /src
 /tests
-.prettierrc
 tsconfig.json
+UPDATING.md

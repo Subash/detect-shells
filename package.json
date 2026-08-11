@@ -5,11 +5,11 @@
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "scripts": {
-    "clean": "rm -r lib",
+    "clean": "rm -rf lib",
     "compile": "tsc",
-    "fetch-shells": "node scripts/fetch-shells.mjs",
+    "typecheck": "npm run compile && tsc -p tests --noEmit",
     "prepack": "npm run clean && npm run compile",
-    "test": "jest"
+    "test": "npm run compile && node --test"
   },
   "repository": {
     "type": "git",
@@ -30,8 +30,7 @@
     "registry-js": "^1.15.1"
   },
   "devDependencies": {
-    "jest": "^29.5.0",
-    "jszip": "^3.10.1",
-    "typescript": "~5.2.0"
+    "@types/node": "^26.2.0",
+    "typescript": "^7.0.2"
   }
 }
