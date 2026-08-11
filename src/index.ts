@@ -36,6 +36,7 @@ export async function launchShell(shell: Shell, path: string): Promise<void> {
   return new Promise<void>((resolve, reject) => {
     shellProcess.on('error', reject)
     shellProcess.on('spawn', resolve)
+    shellProcess.unref() // don't wait around for the shell to exit
   }).catch((e: unknown) => {
     throw new Error(
       e && typeof e === 'object' && 'code' in e && e.code === 'EACCES'

@@ -18,11 +18,17 @@ Last synced commit: `src/shells/upstream.json`.
 ```ts
 export type Shell // at minimum { shell: string; path: string }
 export function getAvailableShells(): Promise<readonly Shell[]> // sorted by name, cached
-export function launchShell(shell: Shell, path: string): Promise<void> // rejects if the executable is gone
+export function launchShell(shell: Shell, path: string): Promise<void> // rejects if the shell could not be started
 ```
 
 Adding a field to a returned shell is a minor bump; removing one or changing a
 signature is major, and not something a sync does as a side effect.
+
+Launching is fire and forget. `launchShell` settles on whether the shell started
+— a missing executable or a failed spawn rejects — and nothing after that is this
+package's business. The shell is detached with its output ignored and the handle
+unref'd, so a caller is free to exit while it is still running. There is a test
+for this; don't regress it by reading a launched process's output.
 
 ## Layout
 
@@ -72,6 +78,7 @@ Deviations are a closed list. Anything else is a bug in the port:
 | `FoundShell` declared per platform file | upstream's generic lived in a `shared.ts` this package doesn't have |
 | `assertNever(x, msg)` → `const unknown: never = shell` | no `fatal-error.ts` |
 | `pathExists` / `findGitOnPath` inlined | no support modules |
+| every launch `spawn` goes through a local detached, stdio-ignoring wrapper | shells are fired and forgotten; the wrapper keeps the call sites themselves upstream's |
 | no `log.*` calls | the logger was a no-op |
 | no custom integrations | unreachable from the public API, and its win32 argv parser is unpublished on npm |
 | no flag-disabled detection (WSL) | dead code; re-enabling one is a feature decision to raise, not a silent flip |

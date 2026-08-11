@@ -1,8 +1,26 @@
 // ported from desktop/desktop app/src/lib/shells/linux.ts
 // see src/shells/upstream.json and UPDATING.md to re-sync
 
-import { spawn, ChildProcess } from 'node:child_process'
+import {
+  spawn as spawnProcess,
+  ChildProcess,
+  SpawnOptions,
+} from 'node:child_process'
 import { access } from 'node:fs/promises'
+
+// shells are fired and forgotten: detached, with their output ignored, so
+// nothing the shell does once started keeps this process alive. every spawn
+// call below is upstream's, unchanged
+const spawn = (
+  command: string,
+  args: ReadonlyArray<string>,
+  options: SpawnOptions = {}
+) =>
+  spawnProcess(command, args, {
+    detached: true,
+    stdio: 'ignore',
+    ...options,
+  })
 
 export const Shell = {
   Gnome: 'GNOME Terminal',

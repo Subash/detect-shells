@@ -1,8 +1,10 @@
 import assert from 'node:assert/strict'
+import { spawn } from 'node:child_process'
+import { once } from 'node:events'
 import { mkdtemp, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
-import { cwd, platform } from 'node:process'
+import { join, resolve } from 'node:path'
+import { cwd, execPath, platform } from 'node:process'
 import test from 'node:test'
 import { getAvailableShells, launchShell } from '../lib/index.js'
 import type { Shell } from '../lib/index.js'
@@ -66,4 +68,41 @@ test('launchShell rejects when the shell cannot be started', async () => {
   await assert.rejects(() => launchShell(shell, cwd()), {
     message: /Not permitted to start/,
   })
+})
+
+test('launchShell does not wait for the shell', async () => {
+  // windows launches through START with a shell, which returns immediately
+  if (platform === 'win32') {
+    return
+  }
+
+  // a "shell" that ignores its arguments and outlives the launch by a while
+  const dir = await mkdtemp(join(tmpdir(), 'detect-shells-'))
+  const path = join(dir, 'shell')
+  await writeFile(path, '#!/bin/sh\nsleep 30\n', { mode: 0o755 })
+
+  const shell = {
+    shell: platform === 'darwin' ? 'Kitty' : 'GNOME Terminal',
+    path,
+    bundleID: 'net.kovidgoyal.kitty',
+  }
+
+  // launch it from a child process and see whether that process is free to
+  // exit, rather than being held open until the shell is done
+  const child = spawn(
+    execPath,
+    [
+      '-e',
+      `require(${JSON.stringify(resolve('lib/index.js'))})` +
+        `.launchShell(${JSON.stringify(shell)}, ${JSON.stringify(dir)})`,
+    ],
+    { stdio: 'inherit' }
+  )
+
+  const start = Date.now()
+  const [code] = await once(child, 'exit')
+  const elapsed = Date.now() - start
+
+  assert.equal(code, 0)
+  assert.ok(elapsed < 5000, `expected a prompt exit, took ${elapsed}ms`)
 })

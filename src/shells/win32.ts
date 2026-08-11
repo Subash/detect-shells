@@ -1,7 +1,11 @@
 // ported from desktop/desktop app/src/lib/shells/win32.ts
 // see src/shells/upstream.json and UPDATING.md to re-sync
 
-import { spawn, ChildProcess } from 'node:child_process'
+import {
+  spawn as spawnProcess,
+  ChildProcess,
+  SpawnOptions,
+} from 'node:child_process'
 import { access } from 'node:fs/promises'
 import * as Path from 'node:path'
 import {
@@ -10,6 +14,20 @@ import {
   RegistryValue,
   RegistryValueType,
 } from 'registry-js'
+
+// shells are fired and forgotten: detached, with their output ignored, so
+// nothing the shell does once started keeps this process alive. every spawn
+// call below is upstream's, unchanged
+const spawn = (
+  command: string,
+  args: ReadonlyArray<string>,
+  options: SpawnOptions = {}
+) =>
+  spawnProcess(command, args, {
+    detached: true,
+    stdio: 'ignore',
+    ...options,
+  })
 
 export const Shell = {
   Cmd: 'Command Prompt',
@@ -50,7 +68,8 @@ function findGitOnPath(): Promise<string | undefined> {
   const wherePath = Path.join(windowsRoot, 'System32', 'where.exe')
 
   return new Promise(resolve => {
-    const cp = spawn(wherePath, ['git'], { cwd: windowsRoot })
+    // spawnProcess, not the detached spawn below: this one's output is read
+    const cp = spawnProcess(wherePath, ['git'], { cwd: windowsRoot })
     const chunks = new Array<Buffer>()
 
     cp.on('error', () => resolve(undefined))
