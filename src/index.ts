@@ -33,9 +33,15 @@ export async function launchShell(shell: Shell, path: string): Promise<void> {
 
   const shellProcess = launch(shell, path)
 
-  return new Promise((resolve, reject) => {
+  return new Promise<void>((resolve, reject) => {
     shellProcess.on('error', reject)
-    resolve()
+    shellProcess.on('spawn', resolve)
+  }).catch((e: unknown) => {
+    throw new Error(
+      e && typeof e === 'object' && 'code' in e && e.code === 'EACCES'
+        ? `Not permitted to start '${shell.shell}' at path '${shell.path}'.`
+        : `Something went wrong while trying to start '${shell.shell}'.`
+    )
   })
 }
 
